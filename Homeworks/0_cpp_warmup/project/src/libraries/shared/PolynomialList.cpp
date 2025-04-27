@@ -67,17 +67,30 @@ double &PolynomialList::coff(int i)
 
 void PolynomialList::compress()
 {
-    std::map<int, double, std::greater<int>> degreeMap;
-    for (const auto &term : m_Polynomial)
+    if (m_Polynomial.empty())
+        return;
+
+    m_Polynomial.sort([](const Term &a, const Term &b)
+                      { return a.deg > b.deg; });
+
+    auto itr = m_Polynomial.begin();
+    while (itr != m_Polynomial.end())
     {
-        degreeMap[term.deg] += term.cof;
-    }
-    m_Polynomial.clear();
-    for (const auto &pair : degreeMap)
-    {
-        if (pair.second != 0.0)
+        auto next_iter = std::next(itr);
+        bool erased = false;
+        if (fabs(itr->cof < EPSILON))
         {
-            m_Polynomial.emplace_back(pair.first, pair.second);
+            itr = m_Polynomial.erase(itr);
+        }
+        else if (next_iter != m_Polynomial.end() && itr->deg == next_iter->deg)
+        {
+            next_iter->cof += itr->cof;
+            itr = m_Polynomial.erase(itr);
+            erased = true;
+        }
+        if (!erased)
+        {
+            ++itr;
         }
     }
 }

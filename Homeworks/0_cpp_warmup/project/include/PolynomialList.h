@@ -17,6 +17,8 @@
 #include <cassert>
 #include <iostream>
 #include <fstream>
+
+#define EPSILON 1.0e-10
 class DECLSPEC_PolynomialList PolynomialList
 {
 public:
