@@ -1,0 +1,51 @@
+# --- 编译生成的文件 ---
+*.exe            # Windows 可执行文件
+*.out            # Linux 可执行文件
+*.a              # 静态库文件
+*.so             # 动态库文件 (Linux)
+*.dll            # 动态库文件 (Windows)
+*.lib            # Windows 库文件
+*.obj            # 对象文件 (MSVC)
+*.o              # 对象文件 (GCC/Clang)
+*.pch            # 预编译头文件
+*.ilk            # MSVC 增量链接文件
+*.exp            # MSVC 导出文件
+*.suo            # Visual Studio 用户选项
+*.sdf            # Visual Studio 数据库
+*.idb            # MSVC 调试信息
+*.ipch           # IntelliSense 预编译头
+*.pdb            # 程序数据库文件 (调试符号)
+*.tlog           # MSVC 编译日志
+*.lastbuildstate # MSVC 最后构建状态
+
+# --- 构建目录 ---
+build/           # CMake/Ninja 等构建目录
+bin/             # 可执行文件输出目录
+obj/             # 对象文件目录
+Debug/           # Visual Studio Debug 目录
+Release/         # Visual Studio Release 目录
+x64/             # 64 位构建输出 (MSVC)
+x86/             # 32 位构建输出 (MSVC)
+
+# --- IDE/编辑器配置 ---
+.vscode/         # VS Code 配置
+.idea/           # CLion/IntelliJ 配置
+*.user           # Qt Creator 用户文件
+*.pro.user       # Qt 项目用户配置
+*.sln            # Visual Studio 解决方案文件
+*.vcxproj*       # Visual Studio 项目文件
+*.filters        # Visual Studio 文件筛选器
+CMakeSettings.json # CMake 配置
+
+# --- 依赖管理 ---
+dependencies/    # 本地依赖库
+third_party/     # 第三方库（如果不需要提交）
+
+# --- 日志和临时文件 ---
+*.log            # 日志文件
+*.tmp            # 临时文件
+*.swp            # Vim 交换文件
+
+# --- 系统文件 ---
+.DS_Store        # macOS 文件属性
+Thumbs.db        # Windows 缩略图缓存
