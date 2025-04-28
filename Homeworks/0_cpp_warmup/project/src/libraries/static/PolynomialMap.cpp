@@ -10,17 +10,22 @@
 using namespace std;
 
 PolynomialMap::PolynomialMap(const PolynomialMap &other)
+	: m_Polynomial(other.m_Polynomial)
 {
-	m_Polynomial = other.m_Polynomial;
 }
 
 PolynomialMap::PolynomialMap(const string &file)
 {
-	ReadFromFile(file);
+	if (!ReadFromFile(file))
+	{
+		std::cerr << "Error: Cannot read from file " << file << '\n';
+	}
 }
 
 PolynomialMap::PolynomialMap(const double *cof, const int *deg, int n)
 {
+	if (n <= 0)
+		return;
 	for (int i = 0; i < n; i++)
 	{
 		AddOneTerm(deg[i], cof[i]);
@@ -38,11 +43,9 @@ PolynomialMap::PolynomialMap(const vector<int> &deg, const vector<double> &cof)
 
 double PolynomialMap::coff(int i) const
 {
-	auto target = m_Polynomial.find(i);
-	if (target == m_Polynomial.end())
-		return 0.f;
+	auto itr = m_Polynomial.find(i);
 
-	return target->second;
+	return itr != m_Polynomial.end() ? itr->second : 0.0;
 }
 
 double &PolynomialMap::coff(int i)
@@ -76,9 +79,9 @@ PolynomialMap PolynomialMap::operator+(const PolynomialMap &right) const
 PolynomialMap PolynomialMap::operator-(const PolynomialMap &right) const
 {
 	PolynomialMap poly(*this);
-	for (const auto &term : right.m_Polynomial)
+	for (const auto &[deg, cof] : right.m_Polynomial)
 	{
-		poly.AddOneTerm(term.first, -term.second);
+		poly.AddOneTerm(deg, -cof);
 	}
 	poly.compress();
 	return poly;
@@ -87,7 +90,7 @@ PolynomialMap PolynomialMap::operator-(const PolynomialMap &right) const
 PolynomialMap PolynomialMap::operator*(const PolynomialMap &right) const
 {
 	PolynomialMap poly(*this);
-	for (const auto &term1 : poly.m_Polynomial)
+	for (const auto &term1 : m_Polynomial)
 	{
 		for (const auto &term2 : right.m_Polynomial)
 		{
@@ -151,15 +154,11 @@ bool PolynomialMap::ReadFromFile(const string &file)
 
 void PolynomialMap::AddOneTerm(int deg, double cof)
 {
-	auto itr = m_Polynomial.find(deg);
-	if (itr == m_Polynomial.end())
-	{
-		m_Polynomial[deg] = cof;
-	}
-	else
+	auto [itr, inserted] = m_Polynomial.try_emplace(deg, cof);
+	if (!inserted)
 	{
 		itr->second += cof;
-		if (fabs(itr->second) < EPSILON)
+		if (std::fabs(itr->second) < EPSILON)
 			m_Polynomial.erase(itr);
 	}
 }

@@ -10,6 +10,8 @@ endif()
 
 add_library(PolynomialListLib SHARED ./PolynomialList.cpp)
 
+target_compile_features(PolynomialListLib PUBLIC cxx_std_17)
+
 target_include_directories(PolynomialListLib PUBLIC
   ${PROJECT_SOURCE_DIR}/include)
 
