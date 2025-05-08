@@ -1,14 +1,8 @@
 #include "PolynomialList.h"
-
+#include <algorithm>
 PolynomialList::PolynomialList(const PolynomialList &other)
+    : m_Polynomial(other.m_Polynomial.begin(), other.m_Polynomial.end())
 {
-    if (other.m_Polynomial.empty())
-        return;
-    for (const auto &term : other.m_Polynomial)
-    {
-        Term newTerm(term.deg, term.cof);
-        m_Polynomial.emplace_back(newTerm);
-    }
     compress();
 }
 
@@ -33,36 +27,39 @@ PolynomialList::PolynomialList(const double *cof, const int *deg, int n)
 }
 
 PolynomialList::PolynomialList(const std::vector<int> &deg, const std::vector<double> &cof)
+    : m_Polynomial(deg.size())
 {
-    assert(deg.size() == cof.size());
-    for (size_t i = 0; i < deg.size(); ++i)
+    if (deg.size() != cof.size())
     {
-        Term newTerm(deg[i], cof[i]);
-        m_Polynomial.push_back(newTerm);
+        throw std::invalid_argument("Degree and coefficient vectors must have same size");
     }
+    std::transform(deg.begin(), deg.end(), cof.begin(), std::back_inserter(m_Polynomial),
+                   [](int d, double c)
+                   { return Term(d, c); });
+
     compress();
 }
 
 double PolynomialList::coff(int i) const
 {
-    for (const auto &term : m_Polynomial)
-    {
-        if (term.deg == i)
-            return term.cof;
-    }
-    return 0.;
+    const auto itr = std::find_if(m_Polynomial.cbegin(), m_Polynomial.cend(),
+                                  [i](const Term &term)
+                                  { return term.deg == i; });
+    return itr != m_Polynomial.cend() ? itr->cof : 0.0;
 }
 
 double &PolynomialList::coff(int i)
 {
-    for (auto &term : m_Polynomial)
+    auto itr = std::find_if(m_Polynomial.begin(), m_Polynomial.end(),
+                            [i](const Term &term)
+                            { return term.deg == i; });
+    if (itr == m_Polynomial.end())
     {
-        if (term.deg == i)
-            return term.cof;
+        m_Polynomial.emplace_back(i, 0.0);
+        return m_Polynomial.back().cof;
     }
-
-    m_Polynomial.emplace_back(i, 0.0);
-    return m_Polynomial.back().cof; //
+    else
+        return itr->cof;
 }
 
 void PolynomialList::compress()
@@ -76,19 +73,19 @@ void PolynomialList::compress()
     auto itr = m_Polynomial.begin();
     while (itr != m_Polynomial.end())
     {
-        auto next_iter = std::next(itr);
-        bool erased = false;
         if (fabs(itr->cof < EPSILON))
         {
             itr = m_Polynomial.erase(itr);
+            continue;
         }
-        else if (next_iter != m_Polynomial.end() && itr->deg == next_iter->deg)
+
+        auto next_iter = std::next(itr);
+        if (next_iter != m_Polynomial.end() && itr->deg == next_iter->deg)
         {
             next_iter->cof += itr->cof;
             itr = m_Polynomial.erase(itr);
-            erased = true;
         }
-        if (!erased)
+        else
         {
             ++itr;
         }
@@ -97,50 +94,54 @@ void PolynomialList::compress()
 
 PolynomialList PolynomialList::operator+(const PolynomialList &right) const
 {
-    std::map<int, double, std::greater<int>> degreeMap;
-    for (const auto &term : m_Polynomial)
+    PolynomialList result;
+    auto itr1 = m_Polynomial.begin();
+    auto itr2 = right.m_Polynomial.begin();
+
+    while (itr1 != m_Polynomial.end() && itr2 != right.m_Polynomial.end())
     {
-        degreeMap[term.deg] += term.cof;
-    }
-    for (const auto &term : right.m_Polynomial)
-    {
-        degreeMap[term.deg] += term.cof;
-    }
-    PolynomialList addResult;
-    for (const auto &pair : degreeMap)
-    {
-        if (pair.second != 0.0)
+        if (itr1->deg > itr2->deg)
         {
-            addResult.AddOneTerm(Term(pair.first, pair.second));
+            result.m_Polynomial.emplace_back(*itr1);
+            ++itr1;
+        }
+        else if (itr1->deg < itr2->deg)
+        {
+            result.m_Polynomial.emplace_back(*itr2);
+            ++itr2;
+        }
+        else
+        {
+            double sum = itr1->cof + itr2->cof;
+            if (fabs(sum) > EPSILON)
+            {
+                result.m_Polynomial.emplace_back(itr1->deg, sum);
+            }
+            ++itr1;
+            ++itr2;
         }
     }
-    return addResult;
+
+    result.m_Polynomial.insert(result.m_Polynomial.end(), itr1, m_Polynomial.end());
+    result.m_Polynomial.insert(result.m_Polynomial.end(), itr2, right.m_Polynomial.end());
+    result.compress();
+    return result;
 }
 
 PolynomialList PolynomialList::operator-(const PolynomialList &right) const
 {
-    std::map<int, double, std::greater<int>> degreeMap;
-    for (const auto &term : m_Polynomial)
+    PolynomialList negatedRight(right);
+    for (auto &term : negatedRight.m_Polynomial)
     {
-        degreeMap[term.deg] += term.cof;
+        term.cof = -term.cof;
     }
-    for (const auto &term : right.m_Polynomial)
-    {
-        degreeMap[term.deg] -= term.cof;
-    }
-    PolynomialList subResult;
-    for (const auto &pair : degreeMap)
-    {
-        if (pair.second != 0.0)
-        {
-            subResult.AddOneTerm(Term(pair.first, pair.second));
-        }
-    }
-    return subResult;
+    return *this + negatedRight;
 }
 
 PolynomialList PolynomialList::operator*(const PolynomialList &right) const
 {
+    if (m_Polynomial.empty() || right.m_Polynomial.empty())
+        return PolynomialList();
     std::map<int, double, std::greater<int>> degreeMap;
     for (const auto &term1 : m_Polynomial)
     {
@@ -149,28 +150,28 @@ PolynomialList PolynomialList::operator*(const PolynomialList &right) const
             degreeMap[term1.deg + term2.deg] += term1.cof * term2.cof;
         }
     }
-    PolynomialList mulResult;
-    for (const auto &pair : degreeMap)
+    PolynomialList result;
+    for (const auto &[deg, cof] : degreeMap)
     {
-        if (pair.second != 0.0)
+        if (cof != 0.0)
         {
-            mulResult.AddOneTerm(Term(pair.first, pair.second));
+            result.AddOneTerm(Term(deg, cof));
         }
     }
-    return mulResult;
+    return result;
 }
 
 PolynomialList &PolynomialList::operator=(const PolynomialList &right)
 {
     if (this == &right)
+    {
         return *this;
+    }
     m_Polynomial.clear();
-
     for (const auto &term : right.m_Polynomial)
     {
         m_Polynomial.emplace_back(term.deg, term.cof);
     }
-    compress();
     return *this;
 }
 
@@ -237,6 +238,22 @@ bool PolynomialList::ReadFromFile(const std::string &file)
 }
 PolynomialList::Term &PolynomialList::AddOneTerm(const Term &term)
 {
-    m_Polynomial.emplace_back(term.deg, term.cof);
-    return m_Polynomial.back();
+    auto itr = m_Polynomial.begin();
+    for (; itr != m_Polynomial.end(); ++itr)
+    {
+        if (itr->deg == term.deg)
+        {
+            itr->cof += term.cof;
+            if (fabs(itr->cof) < EPSILON)
+            {
+                m_Polynomial.erase(itr);
+            }
+            return *itr;
+        }
+        else if (itr->deg < term.deg)
+        {
+            break;
+        }
+    }
+    return *m_Polynomial.insert(itr, term);
 }
