@@ -2,8 +2,9 @@
 
 #include <memory>
 
-#include "common/window.h"
 #include "canvas_widget.h"
+#include "common/debug_utils.h"
+#include "common/window.h"
 
 namespace USTC_CG
 {
