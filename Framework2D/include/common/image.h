@@ -51,8 +51,9 @@ class Image
         : width_(other.width_),
           height_(other.height_),
           channels_(other.channels_),
-          image_data_(std::make_unique<unsigned char[]>(
-              other.width_ * other.height_ * other.channels_))
+          image_data_(
+              std::make_unique<unsigned char[]>(
+                  other.width_ * other.height_ * other.channels_))
     {
         std::copy(
             other.image_data_.get(),

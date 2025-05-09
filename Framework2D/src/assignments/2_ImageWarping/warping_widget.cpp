@@ -3,11 +3,15 @@
 #include <cmath>
 #include <iostream>
 
+#include "warper/warper.h"
+
 namespace USTC_CG
 {
 using uchar = unsigned char;
 
-WarpingWidget::WarpingWidget(const std::string& label, const std::string& filename)
+WarpingWidget::WarpingWidget(
+    const std::string& label,
+    const std::string& filename)
     : ImageWidget(label, filename)
 {
     if (data_)
@@ -111,19 +115,20 @@ void WarpingWidget::warping()
     // HW2_TODO: You should implement your own warping function that interpolate
     // the selected points.
     // Please design a class for such warping operations, utilizing the
-    // encapsulation, inheritance, and polymorphism features of C++. 
+    // encapsulation, inheritance, and polymorphism features of C++.
 
     // Create a new image to store the result
-    Image warped_image(*data_);
+    std::shared_ptr<Image> warped_image = std::make_shared<Image>(*data_);
     // Initialize the color of result image
     for (int y = 0; y < data_->height(); ++y)
     {
         for (int x = 0; x < data_->width(); ++x)
         {
-            warped_image.set_pixel(x, y, { 0, 0, 0 });
+            warped_image->set_pixel(x, y, { 0, 0, 0 });
         }
     }
 
+    std::shared_ptr<Warper> warper = nullptr;
     switch (warping_type_)
     {
         case kDefault: break;
@@ -134,44 +139,42 @@ void WarpingWidget::warping()
             // transfer it to (x', y') in the new image: Note: For this
             // transformation ("fish-eye" warping), one can also calculate the
             // inverse (x', y') -> (x, y) to fill in the "gaps".
-            for (int y = 0; y < data_->height(); ++y)
-            {
-                for (int x = 0; x < data_->width(); ++x)
-                {
-                    // Apply warping function to (x, y), and we can get (x', y')
-                    auto [new_x, new_y] =
-                        fisheye_warping(x, y, data_->width(), data_->height());
-                    // Copy the color from the original image to the result
-                    // image
-                    if (new_x >= 0 && new_x < data_->width() && new_y >= 0 &&
-                        new_y < data_->height())
-                    {
-                        std::vector<unsigned char> pixel =
-                            data_->get_pixel(x, y);
-                        warped_image.set_pixel(new_x, new_y, pixel);
-                    }
-                }
-            }
+            warper = std::make_shared<FisheyeWarper>(
+                data_->height(), data_->width());
             break;
         }
         case kIDW:
         {
-            // HW2_TODO: Implement the IDW warping
-            // use selected points start_points_, end_points_ to construct the map
-            std::cout << "IDW not implemented." << std::endl;
+            warper =
+                std::make_shared<IDWWarper>(data_->height(), data_->width());
+            std::dynamic_pointer_cast<IDWWarper>(warper)->set_points(
+                start_points_, end_points_);
             break;
         }
         case kRBF:
         {
             // HW2_TODO: Implement the RBF warping
-            // use selected points start_points_, end_points_ to construct the map
+            // use selected points start_points_, end_points_ to construct the
+            // map
             std::cout << "RBF not implemented." << std::endl;
             break;
         }
         default: break;
     }
-
-    *data_ = std::move(warped_image);
+    for (int y = 0; y < data_->height(); ++y)
+    {
+        for (int x = 0; x < data_->width(); ++x)
+        {
+            auto [new_x, new_y] = warper->warp(x, y);
+            if (new_x >= 0 && new_x < data_->width() && new_y >= 0 &&
+                new_y < data_->height())
+            {
+                std::vector<unsigned char> pixel = data_->get_pixel(x, y);
+                warped_image->set_pixel(new_x, new_y, pixel);
+            }
+        }
+    }
+    *data_ = std::move(*warped_image);
     update();
 }
 void WarpingWidget::restore()
