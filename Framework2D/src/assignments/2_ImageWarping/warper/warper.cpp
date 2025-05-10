@@ -32,19 +32,4 @@ std::pair<int, int> FisheyeWarper::warp(int x, int y)
     return fisheye_warping(x, y, width_, height_);
 }
 
-std::pair<int, int> IDWWarper::idw_warping(int x, int y, int width, int height)
-{
-    size_t n = start_points_.size();
-    if (n == 0)
-    {
-        return { x, y };
-    }
-    std::vector<Eigen::MatrixXf> transforms(n, Eigen::MatrixXf::Zero(2, 2));
-
-    return { x, y };
-}
-std::pair<int, int> IDWWarper::warp(int x, int y)
-{
-    return idw_warping(x, y, width_, height_);
-}
 }  // namespace USTC_CG

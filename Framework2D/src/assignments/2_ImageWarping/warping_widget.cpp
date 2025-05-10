@@ -3,6 +3,8 @@
 #include <cmath>
 #include <iostream>
 
+#include "warper/IDW_warper.h"
+#include "warper/RBF_warper.h"
 #include "warper/warper.h"
 
 namespace USTC_CG
@@ -153,10 +155,10 @@ void WarpingWidget::warping()
         }
         case kRBF:
         {
-            // HW2_TODO: Implement the RBF warping
-            // use selected points start_points_, end_points_ to construct the
-            // map
-            std::cout << "RBF not implemented." << std::endl;
+            warper =
+                std::make_shared<RBFWarper>(data_->height(), data_->width());
+            std::dynamic_pointer_cast<RBFWarper>(warper)->set_points(
+                start_points_, end_points_);
             break;
         }
         default: break;

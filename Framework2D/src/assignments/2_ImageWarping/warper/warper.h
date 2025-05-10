@@ -42,26 +42,4 @@ class FisheyeWarper : public Warper
     std::pair<int, int> fisheye_warping(int x, int y, int width, int height);
 };
 
-class IDWWarper : public Warper
-{
-   public:
-    IDWWarper(int width, int height) : Warper(width, height) { };
-    ~IDWWarper() override = default;
-
-    std::pair<int, int> warp(int x, int y) override;
-    void set_points(
-        const std::vector<ImVec2>& start_points,
-        const std::vector<ImVec2>& end_points)
-    {
-        start_points_ = start_points;
-        end_points_ = end_points;
-    }
-
-   private:
-    std::pair<int, int> idw_warping(int x, int y, int width, int height);
-
-   private:
-    std::vector<ImVec2> start_points_;
-    std::vector<ImVec2> end_points_;
-};
 }  // namespace USTC_CG
