@@ -2,6 +2,8 @@
 
 #include <cmath>
 
+#include "common/debug_utils.h"
+#include "seamless_clone.h"
 namespace USTC_CG
 {
 using uchar = unsigned char;
@@ -71,14 +73,14 @@ void TargetImageWidget::set_seamless()
 void TargetImageWidget::clone()
 {
     // The implementation of different types of cloning
-    // HW3_TODO: 
+    // HW3_TODO:
     // 1. In this function, you should at least implement the "seamless"
     // cloning labeled by `clone_type_ ==kSeamless`.
     //
     // 2. It is required to improve the efficiency of your seamless cloning to
     // achieve real-time editing. (Use decomposition of sparse matrix before
     // solve the linear system). The real-time updating (update when the mouse
-    // is moving) is only available when the checkerboard is selected. 
+    // is moving) is only available when the checkerboard is selected.
     if (data_ == nullptr || source_image_ == nullptr ||
         source_image_->get_region_mask() == nullptr)
         return;
@@ -99,6 +101,18 @@ void TargetImageWidget::clone()
             {
                 for (int y = 0; y < mask->height(); ++y)
                 {
+                    if (DebugUtils::Debugger::level > 0)
+                    {
+                        // int offset_x =
+                        //     static_cast<int>(mouse_position_.x) -
+                        //     static_cast<int>(source_image_->get_position().x);
+                        // std::cout << "offset_x: " << offset_x << std::endl;
+                        // int offset_y =
+                        //     static_cast<int>(mouse_position_.y) -
+                        //     static_cast<int>(source_image_->get_position().y);
+                        // std::cout << "offset_y: " << offset_y << std::endl;
+                    }
+
                     int tar_x =
                         static_cast<int>(mouse_position_.x) + x -
                         static_cast<int>(source_image_->get_position().x);
@@ -123,7 +137,22 @@ void TargetImageWidget::clone()
             // each pixel in the selected region, calculate the final RGB color
             // by solving Poisson Equations.
             restore();
+            std::shared_ptr<SeamlessClone> seamless_clone =
+                std::make_shared<SeamlessClone>(
+                    source_image_->get_data(), data_, mask);
 
+            auto selected_region_position = source_image_->get_position();
+
+            seamless_clone->set_offset(
+                static_cast<int>(mouse_position_.x),
+                static_cast<int>(mouse_position_.y),
+                static_cast<int>(selected_region_position.x),
+                static_cast<int>(selected_region_position.y));
+
+            if (seamless_clone->solve() == nullptr)
+            {
+                std::cout << "seamless clone: failed" << std::endl;
+            }
             break;
         }
         default: break;

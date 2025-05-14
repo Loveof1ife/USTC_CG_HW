@@ -1,9 +1,6 @@
 #include <stdexcept>
 
-#include "common/debug_utils.h"
 #include "minidraw_window.h"
-
-int DebugUtils::Debugger::level = 1;  // 静态成员初始化
 
 int main(int argc, char* argv[])
 {

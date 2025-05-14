@@ -2,6 +2,7 @@ project(demo_hello_world)
 file(GLOB source
   "${CMAKE_CURRENT_SOURCE_DIR}/demo_hello_world.cpp"
 )
+
 add_executable(${PROJECT_NAME} ${source})
 set_target_properties(${PROJECT_NAME} PROPERTIES 
   DEBUG_POSTFIX "_d"

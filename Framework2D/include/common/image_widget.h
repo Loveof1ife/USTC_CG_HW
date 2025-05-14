@@ -1,5 +1,4 @@
 #pragma once
-
 #include <glad/glad.h>  // Include GLAD before GLFW.
 #include <GLFW/glfw3.h>
 
@@ -7,17 +6,16 @@
 #include <string>
 #include <vector>
 
-#include "imgui.h"
 #include "common/image.h"
 #include "common/widget.h"
+#include "imgui.h"
 
 namespace USTC_CG
 {
-
 // Represents an image component that can be rendered within a GUI.
 class ImageWidget : public Widget
 {
-   public:
+    public:
     // Constructs an Image component with a given label and image file.
     explicit ImageWidget(const std::string& label, const std::string& filename);
     virtual ~ImageWidget();  // Destructor to manage resources.
@@ -43,9 +41,9 @@ class ImageWidget : public Widget
     void load_gltexture();
 
    protected:
-    std::string filename_;                 // Path to the image file.
-    std::shared_ptr<Image> data_;          // Raw pixel data of the image.
-    GLuint tex_id_ = 0;                    // OpenGL texture identifier.
+    std::string filename_;         // Path to the image file.
+    std::shared_ptr<Image> data_;  // Raw pixel data of the image.
+    GLuint tex_id_ = 0;            // OpenGL texture identifier.
 
     ImVec2 position_ = ImVec2(0.0f, 0.0f);  // Position of the image in the GUI.
     int image_width_ = 0, image_height_ = 0;  // Dimensions of the loaded image.

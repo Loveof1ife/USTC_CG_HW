@@ -4,6 +4,7 @@
 
 #include <iostream>
 
+#include "common/debug_utils.h"
 namespace USTC_CG
 {
 PoissonWindow::PoissonWindow(const std::string& window_name)
@@ -91,8 +92,14 @@ void PoissonWindow::draw_toolbar()
         add_tooltips(
             "Press this button and then click in the target image, to "
             "clone the selected region to the target image.");
-        // HW3_TODO: You may add more items in the menu for the different types
-        // of Poisson editing.
+
+        if (ImGui::MenuItem("Seamless") && p_target_ && p_source_)
+        {
+            p_target_->set_seamless();
+        }
+        add_tooltips(
+            "Press this button and then click in the target image, to "
+            "clone the selected region to the target image.");
 
         ImGui::EndMainMenuBar();
     }
@@ -136,6 +143,22 @@ void PoissonWindow::draw_source()
 
 void PoissonWindow::draw_open_target_image_file_dialog()
 {
+    if (DebugUtils::Debugger::level > 0)
+    {
+        std::string defaultFilePath =
+            "F:\\USTC_CG_HW\\Homeworks\\3_poisson_image_"
+            "editing\\data\\NewBackGround.jpg";
+
+        std::string label = defaultFilePath;
+        p_target_ = std::make_shared<TargetImageWidget>(label, defaultFilePath);
+
+        if (p_source_)
+        {
+            p_target_->set_source(p_source_);
+        }
+        flag_open_target_file_dialog_ = false;
+        return;  // Exit early, skipping the file dialog
+    }
     IGFD::FileDialogConfig config;
     config.path = DATA_PATH;
     config.flags = ImGuiFileDialogFlags_Modal;
@@ -151,7 +174,8 @@ void PoissonWindow::draw_open_target_image_file_dialog()
             std::string filePathName =
                 ImGuiFileDialog::Instance()->GetFilePathName();
             std::string label = filePathName;
-            p_target_ = std::make_shared<TargetImageWidget>(label, filePathName);
+            p_target_ =
+                std::make_shared<TargetImageWidget>(label, filePathName);
             if (p_source_)
                 p_target_->set_source(p_source_);
         }
@@ -162,6 +186,22 @@ void PoissonWindow::draw_open_target_image_file_dialog()
 
 void PoissonWindow::draw_open_source_image_file_dialog()
 {
+    if (DebugUtils::Debugger::level > 0)
+    {
+        std::string defaultFilePath =
+            "F:\\USTC_CG_HW\\Homeworks\\3_poisson_image_"
+            "editing\\data\\BearInWater.jpg";
+
+        std::string label = defaultFilePath;
+        p_source_ = std::make_shared<SourceImageWidget>(label, defaultFilePath);
+
+        if (p_source_)
+        {
+            p_target_->set_source(p_source_);
+        }
+        flag_open_source_file_dialog_ = false;
+        return;  // Exit early, skipping the file dialog
+    }
     IGFD::FileDialogConfig config;
     config.path = DATA_PATH;
     config.flags = ImGuiFileDialogFlags_Modal;
@@ -177,7 +217,8 @@ void PoissonWindow::draw_open_source_image_file_dialog()
             std::string filePathName =
                 ImGuiFileDialog::Instance()->GetFilePathName();
             std::string label = filePathName;
-            p_source_ = std::make_shared<SourceImageWidget>(label, filePathName);
+            p_source_ =
+                std::make_shared<SourceImageWidget>(label, filePathName);
             // Bind the source image to the target
             if (p_source_)
                 p_target_->set_source(p_source_);
